@@ -8,9 +8,12 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <link rel="stylesheet" href="/libs/layui/css/layui.css" media="all">
-    <link rel="stylesheet" href="/libs/layui/css/data.css">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
         integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <link href='https://fonts.googleapis.com/css?family=Roboto Slab' rel='stylesheet'>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    
+    <link rel="stylesheet" href="/libs/layui/css/data.css">
 
 
 </head>
@@ -38,18 +41,35 @@
             <a class="p-2 text-dark" href="#">Enterprise</a>
             <a class="p-2 text-dark" href="#">Support</a>
         </nav>
-        <a class="btn btn-outline-primary" href="#">Sign up</a>
+        <% if (typeof userID != 'undefined') { %>
+            <form class="form-inline" action="/users/add" method="post">
+            <input type="hidden" name="userID" id="userID"  value="<%= userID %>" >
+            <button type="submit" class="btn btn-success">Generate my recommendation!</button>
+            </form>
+        <% } %>
     </div>
     <div class="container border border-light rounded-lg col-11 box-shadow" id="container1">
-        <div class="row datarow">
-            <form action="/users/add" method="post" class="layui-form">
-                <div class="layui-form-item">
-                    <label class="layui-form-label">UserID</label>
-                    <div class="layui-input-inline" style="left: 6.9%">
-                        <input type="number" name="userID" id="userID" value="" required lay-verify="required"
-                            placeholder="from 0 to 6200" autocomplete="off" class="layui-input">
-                    </div>
+        <div class="form1">
+            <form action="/users/display" method="post">
+                <div class="form-group row">
+                  <label for="userID" class="col-sm-2 col-form-label">Please input user ID:</label>
+                  <div class="col-sm-2">
+                    <% if (typeof userID === 'undefined') { %>
+                        <input type="number" class="form-control" name="userID" id="userID" value="" required lay-verify="required"
+                        placeholder="from 1 to 1200" autocomplete="off">
+                    <% } else { %>
+                        <input type="number" class="form-control" name="userID" id="userID" value="<%= userID %>" required lay-verify="required"
+                        placeholder="from 1 to 1200" autocomplete="off">
+                    <% } %>
+                  </div>
+                  <div class="col-sm-2">
+                    <button type="submit" class="btn btn-success">Submit</button>
                 </div>
+                </div>
+            </form>
+        </div>
+
+            
 
                 <!-- <div style="width: 550px; position: relative; left: 8.5%;">
                     <div class="layui-form-item">
@@ -66,18 +86,47 @@
                     </div>
                 </div> -->
 
-                <div class="layui-form-item">
 
-
-                    <div class="layui-input-block" style="left: 10.5%">
-                        <button class="layui-btn" lay-submit lay-filter="formDemo" id="find"
-                            style="margin-top: 10px; left: 120%;position: relative;">Submit
-                        </button>
+            <% if (typeof ratings != 'undefined') { %>
+                <div class="wrapper">   
+                    <div id="slider4" class="text-center">
+                        <% Object.keys(ratings).forEach(function(prop) { %>
+                            <div class="slide">
+                                <img class='pic pic2' src="<%= ratings[prop].posterUrl %>" >
+                                <p class="card__title"> <%= ratings[prop].movieName %> </p>
+                                <div class="rating">
+                                    <% for(j = 0,len=parseInt(ratings[prop].score); j < len; j++) { %>
+                                        <span class='fa fa-star checked'></span>
+                                    <% } %>
+                                </div>
+                            </div>
+                        <% }); %>
                     </div>
                 </div>
+            <% } %>
 
-            </form>
-        </div>
+            <% if (typeof summary != 'undefined') { %>
+                <table class="table table-sm summarytable">
+                    <thead>
+                      <tr>
+                        <th scope="col">Genre</th>
+                        <th scope="col">Proportion</th>
+                        <th scope="col">Average Rating</th>
+                      </tr>
+                    </thead>
+                    <% Object.keys(summary).forEach(function(genre) { %>
+
+                        <tbody>
+                        <tr>
+                            <th scope="row"><%= genre%></th>
+                            <td><%= summary[genre][0]%>  /  <%= total%> </td>
+                            <td><span class='fa fa-star checked' style='padding:3px'></span><%= summary[genre][1]%></td>
+                        </tr>
+                        </tbody>
+                    <% }); %>
+                  </table>
+
+            <% } %>
 
     </div>
     <!-- <div class="layui-carousel" id="test1" style="margin: 4px 90px; text-align: center; background-color: #F2F2F2;">

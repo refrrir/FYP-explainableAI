@@ -57,21 +57,32 @@ function loadAll(numOfGen, numOfRec) {
 }
 
 
+
 function loadSliders(num, sliderarea, id) {
+	var sortable = [];
+	for (var score in genre_score) {
+		sortable.push([score, genre_score[score]]);
+	}
+
+	sortable.sort(function(a, b) {
+		return b[1] - a[1];
+	});
+
+
 	for (let key in genre_score) {
 		var slidecontainer = document.createElement("div");
 		// var sliderarea = document.getElementById("sliderarea");
 		slidecontainer.class = 'slidecontainer';
 		var text = document.createElement("label");
-		text.classList.add('col-4');
 		text.innerHTML = genreName.get(key);
+		text.classList.add('genre-name');
 		var slider = document.createElement("input");
 		slider.type = 'range';
 		slider.min = '1';
 		slider.max = '100';
-		slider.value = genre_score[key] * 100;
-		slider.classList.add('col-8');
+		slider.value = genre_score[key] * 80 / sortable[0][1];
 		slider.classList.add('slider');
+		slider.classList.add('slider2');
 		if (id != '') {
 			slider.id = id + " " + key;
 		}
@@ -89,15 +100,15 @@ function loadSliders2(data, sliderarea, id) {
 		// var sliderarea = document.getElementById("sliderarea");
 		slidecontainer.class = 'slidecontainer';
 		var text = document.createElement("label");
-		text.classList.add('col-4');
+		text.classList.add('genre-name');
 		text.innerHTML = genreName.get(key);
 		var slider = document.createElement("input");
 		slider.type = 'range';
-		slider.min = '1';
+		slider.min = '0';
 		slider.max = '100';
 		slider.value = data[key] * 100;
 		// console.log(data);
-		slider.classList.add('col-8');
+		// slider.classList.add('col-8');
 		slider.classList.add('slider');
 		if (id != '') {
 			slider.id = id + " " + key;

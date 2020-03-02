@@ -7,7 +7,8 @@ var movieInfo = new Schema({
     _id:String,
     itemName:String,
     genres:String,
-    posterUrl:String
+    posterUrl:String,
+    
 },{collection: 'movieInfo'});
 
 var movieInfo = mongoose.model('movieInfo',movieInfo);

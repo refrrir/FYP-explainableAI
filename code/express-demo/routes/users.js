@@ -11,6 +11,8 @@ var mg = require('../models/movie_genreModel.js');
 var ua = require('../models/user_aspect.js');
 var ia = require('../models/item_aspect.js');
 var movieInfo = require('../models/itemInfo.js');
+var userRating = require('../models/user_rating.js');
+var questionInfo = require('../models/questionInfo.js');
 
 
 var _ = require('underscore');
@@ -19,6 +21,7 @@ var gs_rerank = require('../models/genre_user_scoreModel.js');
 var mgs_rerank = require('../models/movie_genre_scoreModel.js');
 
 var userID;
+var topn;
 // rank list store movie id
 var movie_list;
 
@@ -74,7 +77,7 @@ function retrieveUserAspect(userID, callback) {
     });
 };
 
-function retrieveItemAspect(regeneration,genres,userID, callback){
+function retrieveItemAspect(regeneration,genres,userID,topn,callback){
 //     Story.
 //   findOne({ title: 'Casino Royale' }).
 //   populate('author').
@@ -95,10 +98,6 @@ function retrieveItemAspect(regeneration,genres,userID, callback){
                 var g = dat.genreID;
                 var score = dat.score;
                 var i = dat.itemID;
-                // console.log("item is" + item);
-                // console.log(dat);
-                // console.log("sss");
-                // console.log(g);
                 if(score != 0){
                     if(!rec.has(i)){
                         rec.set(i,0);
@@ -138,21 +137,21 @@ function retrieveItemAspect(regeneration,genres,userID, callback){
                     }
                 });        
             });
-            if(score != 0){
-                    if(!rec.has(i)){
-                        rec.set(i,0);
-                        genreObject[String(i)] = {};
-                    }
-                    genreObject[String(i)][String(g)] = score;
-                    rec.set(String(i),rec.get(i) + score * genres[g]);
-                }
+            // if(score != 0){
+            //         if(!rec.has(i)){
+            //             rec.set(i,0);
+            //             genreObject[String(i)] = {};
+            //         }
+            //         genreObject[String(i)][String(g)] = score;
+            //         rec.set(String(i),rec.get(i) + score * genres[g]);
+            //     }
             console.log("in");
         }
         else{
             console.log("out");
         }
         var arrayObj=Array.from(rec);
-        arrayObj = arrayObj.sort(function(a,b){return b[1]-a[1]}).slice(0,10);
+        arrayObj = arrayObj.sort(function(a,b){return b[1]-a[1]}).slice(0,topn);
 
         var newObj = {};
         for (var dat in arrayObj){
@@ -161,7 +160,7 @@ function retrieveItemAspect(regeneration,genres,userID, callback){
         genreObject = newObj;
         result.genrePro = genreObject;
         result.genres = genres;
-
+        result.topn = topn;
         var ids = [];
         var m = 0
         arrayObj.forEach(function(entry,index) {
@@ -202,15 +201,17 @@ function retrieveItemAspect(regeneration,genres,userID, callback){
 router.post('/add', function (req, res, next) {
 
     userID = req.body.userID;
-
+    topn = req.body.topn;
     dev = req.body.dev;
-    // console.log(dev);
-
+    if(typeof topn === "undefined"){
+        topn = 10;
+    }
+    console.log(topn);
     retrieveUserAspect(userID, function(err, genres) {
         if (err) {
           console.log(err);
         }
-        retrieveItemAspect(null,genres,userID,function(err,rec){
+        retrieveItemAspect(null,genres,userID,topn,function(err,rec){
             res.render('UserList', {
                 // data: genres,
                 rec:rec,
@@ -232,11 +233,15 @@ router.post('/update',function (req,res,next){
     // console.log(req.body);
     // console.log("rec is");
     // console.log(rec);
+    // topn = req.body.topn;
+    // if(typeof topn === "undefined"){
+    //     topn = 10;
+    // }
     retrieveUserAspect(userID, function(err, genres) {
         if (err) {
           console.log(err);
         }
-        retrieveItemAspect(req.body,genres,userID,function(err,rec){
+        retrieveItemAspect(req.body,genres,userID,topn,function(err,rec){
             res.render('UserList', {
                 // data: genres,
                 rec:rec,
@@ -251,6 +256,111 @@ router.post('/update',function (req,res,next){
 
 });
 
+
+router.post('/display', function (req, res, next) {
+
+    userID = req.body.userID;
+    userRating.find({userID: userID}).exec(function (err, data) {
+        var ratings = {};
+        var ids = [];
+        var i = 0;
+        if (err) {
+            callback(err, null);
+        }else{    
+            for(let dat of data){
+                ratings[dat.movieID] = {};
+                ratings[dat.movieID].score = dat.score;
+                ids[i] = dat.movieID;
+                i++;
+            }
+        }
+
+        movieInfo.find({_id:ids}).exec(function(err,data){
+            if(err){
+                callback(err,null);
+            }else{
+                summary = {};
+                for(let dat in data){
+                    
+                    genres = data[dat].genres.trim().split("|");
+                    for(let genre of genres){
+                        if (!(genre in summary)){
+                            summary[genre] = [1,parseInt(ratings[data[dat]._id].score)];
+
+                        }else{
+                            number = summary[genre][0] + 1;
+                            score = summary[genre][1] + parseFloat(ratings[data[dat]._id].score)
+                            summary[genre] = [number,score];
+                        }
+
+                    }
+
+                    if(data[dat].posterUrl == ""){
+                        delete ratings[data[dat]._id];
+                    }
+                    else{
+                        ratings[data[dat]._id].movieName = data[dat].itemName;
+                        ratings[data[dat]._id].posterUrl = data[dat].posterUrl;
+
+                    }
+                        
+                    
+                }
+                for(let genre in summary){
+                    summary[genre][1] = (summary[genre][1] / summary[genre][0]).toFixed(1);
+                    i ++;
+                    // if(i > 9){
+                    //     summary[genre][]
+                    // }
+                }
+                console.log(summary);
+                // console.log(Object.keys(ratings).length);
+                // console.log(ratings);
+                res.render('UserAdd',{
+                    ratings: ratings,
+                    userID:userID,
+                    summary:summary,
+                    total:ids.length,
+                });
+            }
+        });
+        
+
+    });
+    
+});
+
+router.get('/survey',function (req,res,next){
+    questionInfo.find().exec(function (err, data) {
+        if (err) {
+            callback(err, null);
+        }else{    
+            // console.log(data);
+            optionsObj = {};
+            for(dat in data){
+                if(data[dat].type == 'inlineRadio' || data[dat].type == 'radio' || data[dat].type == 'checkbox'){
+                    // console.log(JSON.stringify(data[dat]));
+                    // console.log(data[dat]["numOfOptions"]);
+                    // data[dat].numOfOptions = parseInt(data[dat].numOfOptions);
+                    // console.log(data[dat].numOfOptions);
+                    var id = data[dat]._id;
+                    var o = data[dat].options.split("&");
+                    optionsObj[id] = o;
+                    // optionsObj[id].push(o.length);
+
+                }
+            }
+            console.log(optionsObj);
+            console.log(data);
+            res.render('survey',{
+                data:data,
+                optionsObj:optionsObj,
+            });
+
+        }
+    });
+
+});
 
 function getMovieGenreScore(userid, movielist) {
     var all_genres = new Set();

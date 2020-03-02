@@ -1,6 +1,9 @@
 body {
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   position: relative;
+  font-family: Verdana, Arial, sans-serif;
+  color: #333;
+  font-size: 16px;
+
 }
 
 svg {
@@ -29,9 +32,10 @@ polyline{
 
 }
 
-#container1{
-  margin-top: 50px;
+#containerarea1{
+  margin-top: 100px;
   padding: 50px;
+  background-color: #f6f6f557;
 }
 
 .datarow {
@@ -44,14 +48,19 @@ polyline{
 
 .slider {
   -webkit-appearance: none;
-  width: 80%;
+  width: 50%;
   height: 15px;
   border-radius: 5px;
-  background: #d3d3d3;
+  background: #bfccb68a;
   outline: none;
   opacity: 0.7;
   -webkit-transition: .2s;
   transition: opacity .2s;
+  margin-top: 5px;
+}
+
+.slider2{
+  width: 70%;
 }
 
 .slider:hover {
@@ -64,7 +73,7 @@ polyline{
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: #4CAF50;
+  background: #28a745;
   cursor: pointer;
 }
 
@@ -91,4 +100,149 @@ polyline{
 
 .movieslider{
   width:800px;
+  color:#666666;
+}
+
+.pic{
+  /* float: left; */
+  width: 180px;
+  max-height: 270px;
+}
+
+.pic2{
+  /* border-radius: 10px; */
+  border-radius: 10px 10px 0px 0px;
+}
+
+.picarea{
+  max-width: 20%;
+}
+.item{
+  padding:20px;
+}
+.title{
+  padding-top: 10px;
+  color:#336699;
+  font-size:17px;
+  font-family: Verdana, Arial, sans-serif;
+}
+
+.checked {
+  color: orange;
+}
+
+.score{
+  float:right;
+  padding-left:4px;
+}
+
+.genre-name{
+  min-width: 90px;
+}
+
+footer {
+  position: fixed;
+  height: 50px;
+  bottom: 0;
+  width: 100%;
+  background-color: #fff;
+}
+
+/* #regenerate{
+  position: fixed;
+  z-index: 9999;
+  right:200px;
+  bottom:140px;
+
+} */
+
+
+
+.lds-ring {
+  display: inline-block;
+  position: relative;
+  width: 80px;
+  height: 80px;
+}
+.lds-ring div {
+  box-sizing: border-box;
+  display: block;
+  position: absolute;
+  width: 64px;
+  height: 64px;
+  margin: 8px;
+  border: 8px solid rgb(77, 75, 75);
+  border-radius: 50%;
+  animation: lds-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+  border-color: rgb(77, 75, 75) transparent transparent transparent;
+}
+.lds-ring div:nth-child(1) {
+  animation-delay: -0.45s;
+}
+.lds-ring div:nth-child(2) {
+  animation-delay: -0.3s;
+}
+.lds-ring div:nth-child(3) {
+  animation-delay: -0.15s;
+}
+@keyframes lds-ring {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.wrapper{
+  overflow-x:scroll;     
+  white-space: nowrap;
+  margin:20px;
+}
+
+.slide{
+  background-color: #e0e6f1c2;
+  height: 380px;
+  display: inline-block;
+  width: 180px;
+  vertical-align:top;
+  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.2), 0 3px 10px 0 rgba(0, 0, 0, 0.19);
+  margin-right:4px;
+  margin-bottom: 6px;
+  border-radius: 10px;
+  position:relative;
+
+}
+
+.card__title {
+  margin: 10px 0px 10px 10px;
+  padding-right: 20px;
+  font-family: 'Roboto Slab', serif;
+  font-size: 13px;
+  width: 180px;
+  /* word-break:break-all; */
+  white-space:normal;
+  text-align:left;
+  font-weight: bold;
+
+
+}
+.rating{
+  bottom:20px;
+  position:absolute;
+  left:10px;
+}
+.form1{
+  padding:20px;
+}
+
+.summarytable{
+  margin: 30px;
+  width:90%;
+  font-family: 'Roboto Slab', serif;
+  font-size: 15px;
+}
+
+#container1{
+  margin-bottom: 70px;
 }
