@@ -1,0 +1,5 @@
+Metric,RMSE,Coverage
+Cosine,0.877018,99.88%
+Pearson,0.938288,95.33%
+Pearson Sig,0.879282,99.91%
+MSD,0.931591,95.02%

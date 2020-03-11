@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Movie Finder</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="/libs/layui/css/layui.css" media="all">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+        integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <link href='https://fonts.googleapis.com/css?family=Roboto Slab' rel='stylesheet'>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+    <link rel="stylesheet" href="/libs/layui/css/data.css">
+
+    <style>
+        table {
+            border-collapse: collapse;
+            font: 12px sans-serif;
+        }
+
+        td {
+            padding: 5px;
+        }
+    </style>
+</head>
+
+<body class="mdui-theme-primary-teal">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
+    <script src="https://d3js.org/d3.v3.min.js"></script>
+
+    <!-- <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
+        integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n"
+        crossorigin="anonymous"></script> -->
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+        integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+        crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
+        integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
+        crossorigin="anonymous"></script>
+
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+
+    <script>
+        function submit() {
+            console.log(asd);
+            event.preventDefault();
+
+            if (document.getElementById("uafile").files.length == 0) {
+                console.log("no files selected");
+                return false;
+            } else {
+                return true;
+            }
+        }
+    </script>
+    <div class="d-flex flex-column flex-md-row align-items-center p-3 px-md-4 mb-3 bg-white border-bottom box-shadow">
+        <h5 class="my-0 mr-md-auto font-weight-normal">Explainable AI</h5>
+        <nav class="my-2 my-md-0 mr-md-3">
+            <a class="p-2 text-dark" href="#">Features</a>
+            <a class="p-2 text-dark" href="/users/administration">Administration</a>
+            <a class="p-2 text-dark" href="/users/survey">Survey</a>
+        </nav>
+    </div>
+    <div class="container border border-light rounded-lg col-11 box-shadow" style="padding:20px" id="container1">
+        <form action="/users/fileupload" enctype="multipart/form-data" method="post" id="formua">
+            <% if (typeof message != 'undefined') { %>
+            <%- message %>
+            <% } %>
+            <div class="callout callout-default">
+                <h4>Reminder</h4>
+                Please upload a csv file with header of userID, genreID and score.
+            </div>
+            <div class="custom-file">
+                <input type="file" class="custom-file-input" id="uafile" style="width: 40%" name="filetoupload1">
+                <label class="custom-file-label" for="customFile" style="width: 40%">Choose file</label>
+                <!-- <input type="submit" name="btn" value="Upload"  class="btn btn-success" style="margin-left:50px;vertical-align: text-bottom;"/> -->
+                <button class="btn btn-success" style="vertical-align: text-bottom;" type="button" value="Upload"
+                    id="submitButton1">
+                    <!-- <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    Loading... -->
+                    Submit
+                </button>
+            </div>
+
+        </form>
+        <div id="displaydata1" style="padding-top:30px">
+
+        </div>
+
+    </div>
+    <script>
+        $("#fileControl").val('');
+        $('#submitButton1').click(function(){
+            $('#submitButton1').html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>Loading...');
+            $('#submitButton1').attr('disabled','disabled');
+            $("#formua").submit();
+        })
+       
+        $('.custom-file-input').on('change', function () {
+            $("#uafile").html("");
+            var fileName = $(this).val();
+            console.log(fileName);
+            $(this).next('.custom-file-label').addClass("valid-file-label").html(fileName);
+            var file = document.getElementById("uafile").files[0];
+            var file_url = URL.createObjectURL(file);
+            $("#displaydata1").append("p").html("Preview the first 20 rows at most")
+            d3.text(file_url, function (data) {
+                var parsedCSV = d3.csv.parseRows(data);
+                console.log(parsedCSV);
+                parsedCSV = parsedCSV.slice(0, 21);
+                console.log(parsedCSV);
+
+                var container = d3.select("#displaydata1")
+                    .append("table").attr("class", "table table-bordered")
+
+                    .selectAll("tr")
+                    .data(parsedCSV).enter()
+                    .append("tr")
+
+                    .selectAll("td")
+                    .data(function (d) { return d; }).enter()
+                    .append("td")
+                    .text(function (d) { return d; });
+            });
+
+        })
+
+    </script>
+    <script type="text/javascript" charset="utf-8">
+
+    </script>
+</body>
