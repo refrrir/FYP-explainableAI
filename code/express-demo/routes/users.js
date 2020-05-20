@@ -12,23 +12,21 @@ var async = require("async");
 
 
 
-var ub = require('../models/userModel.js');
-var gs = require('../models/genre_userModel.js');
-var mg = require('../models/movie_genreModel.js');
 var ua = require('../models/user_aspect.js');
 var ia = require('../models/item_aspect.js');
 var movieInfo = require('../models/itemInfo.js');
 var userRating = require('../models/user_rating.js');
 var questionInfo = require('../models/questionInfo.js');
+var anserInfo = require('../models/answerinfo.js')
 
 
 var _ = require('underscore');
 
-var gs_rerank = require('../models/genre_user_scoreModel.js');
-var mgs_rerank = require('../models/movie_genre_scoreModel.js');
-
 var userID;
 var topn;
+
+const genreName = new Map([["1", "Action"], ["2", "Adventure"], ["3", "Animation"], ["4", "Children's"], ["5", "Comedy"], ["6", "Crime"], ["7", "Documentary"], ["8", "Drama"], ["9", "Fantasy"], ["10", "Film-Noir"], ["11", "Horror"], ["12", "Musical"], ["13", "Mystery"], ["14", "Romance"], ["15", "Sci-Fi"], ["16", "Thriller"], ["17", "War"], ["18", "Western"]]);
+
 // rank list store movie id
 var movie_list;
 
@@ -84,7 +82,7 @@ function retrieveUserAspect(userID, callback) {
     });
 };
 
-function retrieveItemAspect(regeneration, genres, userID, topn, callback) {
+function retrieveItemAspect(regeneration, genres, topn, userID, callback) {
     //     Story.
     //   findOne({ title: 'Casino Royale' }).
     //   populate('author').
@@ -111,7 +109,7 @@ function retrieveItemAspect(regeneration, genres, userID, topn, callback) {
                         genreObject[String(i)] = {};
                     }
                     genreObject[String(i)][String(g)] = score;
-                    rec.set(String(i), rec.get(i) + score * genres[g]);
+                    rec.set(String(i), rec.get(i) + score * genres[String(g)]);
                 }
 
             }
@@ -140,8 +138,11 @@ function retrieveItemAspect(regeneration, genres, userID, topn, callback) {
                         if (!rec.has(item)) {
                             rec.set(item, 0);
                         }
-                        rec.set(item, rec.get(item) + score * genres[genre]);
+                        if(genres.hasOwnProperty(genre)){
+                            rec.set(item, rec.get(item) + score * genres[genre]);
+                        }
                     }
+
                 });
             });
             // if(score != 0){
@@ -158,7 +159,14 @@ function retrieveItemAspect(regeneration, genres, userID, topn, callback) {
             console.log("out");
         }
         var arrayObj = Array.from(rec);
-        arrayObj = arrayObj.sort(function (a, b) { return b[1] - a[1] }).slice(0, topn);
+        arrayObj = arrayObj.sort(function (a, b) { 
+            if(isNaN(b[1])) { 
+                return 1-isNaN(a[1]);
+            }
+            else{
+                return b[1] - a[1];
+            }
+        }).slice(0, 10);
 
         var newObj = {};
         for (var dat in arrayObj) {
@@ -166,16 +174,40 @@ function retrieveItemAspect(regeneration, genres, userID, topn, callback) {
         }
         genreObject = newObj;
         result.genrePro = genreObject;
-        result.genres = genres;
-        result.topn = topn;
+
+        var sortable = [];
+        for (var key in genres) {
+            sortable.push([key, genres[key]]);
+        }
+
+        sortable.sort(function(a, b) {
+            return b[1] - a[1];
+        });
+        if(sortable.length > 9){
+            sortable = sortable.slice(0,10);
+        }
+        var highest = sortable[0][1];
+
+        var objSorted = {};
+        var genreRanking = {};
+        var i = 1;
+        sortable.forEach(function(item){
+            objSorted[item[0]]=item[1];
+            genreRanking[item[0]] = i;
+            i ++;
+        })
+        // console.log(genreRanking);
+
+        result.genres = objSorted;
+        result.highest = highest;
+        result.genreRanking = genreRanking;
+        // result.topn = topn;
         var ids = [];
         var m = 0
         arrayObj.forEach(function (entry, index) {
             ids[m] = entry[0];
             m = m + 1;
         });
-        // ids.sort(function(a, b){return a-b});
-        // console.log("ids is " + ids);
         movieInfo.find({ _id: ids }).exec(function (err, data) {
             if (err) {
                 callback(err, null);
@@ -183,13 +215,10 @@ function retrieveItemAspect(regeneration, genres, userID, topn, callback) {
                 // console.log("result is " + data);
                 for (let dat in data) {
                     for (j = 0, len = arrayObj.length; j < len; j++) {
-                        // console.log(arrayObj[j][0]);
-                        // console.log(data[dat]._id);
 
                         if (arrayObj[j][0] == data[dat]._id) {
                             arrayObj[j][2] = data[dat].itemName;
                             arrayObj[j][3] = data[dat].posterUrl;
-                            // console.log(data[dat]);
                         }
                     }
                 }
@@ -198,67 +227,88 @@ function retrieveItemAspect(regeneration, genres, userID, topn, callback) {
             }
         });
 
-        // console.log(result.recPro);
-
     });
 }
 
+router.post('/explanation',function (req,res,next){
 
-
-router.post('/add', function (req, res, next) {
+    var type = req.body.explanationtype;
 
     userID = req.body.userID;
-    topn = req.body.topn;
+    topn = 10;
     dev = req.body.dev;
-    if (typeof topn === "undefined") {
-        topn = 10;
-    }
-    console.log(topn);
     retrieveUserAspect(userID, function (err, genres) {
         if (err) {
             console.log(err);
         }
         retrieveItemAspect(null, genres, userID, topn, function (err, rec) {
-            res.render('UserList', {
-                // data: genres,
-                rec: rec,
-                userID, userID,
-            });
-            // console.log(rec);
+            if(type == 'sliderexplanation'){
+                res.render('sliderExplanation', {
+                    recPro : rec.recPro,
+                    genrePro: rec.genrePro,
+                    genres: rec.genres,
+                    userID, userID,
+                    genreName: genreName,
+                    highest: rec.highest,
+                    genreRanking: rec.genreRanking,
+                });
+            }else if(type == 'textexplanation'){
+                res.render('textExplanation', {
+                    recPro : rec.recPro,
+                    genrePro: rec.genrePro,
+                    genres: rec.genres,
+                    userID, userID,
+                    genreName: genreName,
+                    highest: rec.highest,
+                    genreRanking: rec.genreRanking,
+                });
+            }else if(type == 'noexplanation'){
+                res.render('noExplanation', {
+                    recPro : rec.recPro,
+                    genrePro: rec.genrePro,
+                    genres: rec.genres,
+                    userID, userID,
+                    genreName: genreName,
+                    highest: rec.highest,
+                    genreRanking: rec.genreRanking,
+                });
+            }
         })
-        // res.render('UserList', {
-        //     data: genres
-        // });
     });
+
+
+
 
 });
 
+
+
+
+
+
+
 router.post('/update', function (req, res, next) {
-    // var rec = req.body.genre_score;
-    // console.log(rec);
-    // console.log(req);
-    // console.log(req.body);
-    // console.log("rec is");
-    // console.log(rec);
-    // topn = req.body.topn;
-    // if(typeof topn === "undefined"){
-    //     topn = 10;
-    // }
+
+    console.log(req.body);
+
+
     retrieveUserAspect(userID, function (err, genres) {
         if (err) {
             console.log(err);
         }
-        retrieveItemAspect(req.body, genres, userID, topn, function (err, rec) {
-            res.render('UserList', {
-                // data: genres,
-                rec: rec,
-                userID, userID
+        retrieveItemAspect(req.body, genres, userID, 10, function (err, rec) {
+            res.send({
+                recPro : rec.recPro,
+                genrePro: rec.genrePro,
+                genres: rec.genres,
+                userID, userID,
+                genreName: genreName,
+                highest: rec.highest,
+                genreRanking: rec.genreRanking,
+
             });
-            // console.log(rec);
         })
-        // res.render('UserList', {
-        //     data: genres
-        // });
+        
     });
 
 });
@@ -369,20 +419,50 @@ router.get('/survey', function (req, res, next) {
 
 });
 
+router.post('/submitsurvey' ,function(req,res,next){
+    anserInfo.find().sort({submitId : -1}).limit(1).exec(function (err, data) {
+        var sId;
+        if (data.length == 0){
+            sId = 1;
+        }else{
+            sId = parseInt(data.pop().submitId) + 1;
+        }
+        var ans = req.body;
+        var arr = [];
+        for(var a in ans){
+            var record = {};
+            record.submitId = sId;
+            record.question = ans[a][0];
+            record.answer = ans[a][1];
+            arr.push(record);
+        }
+        console.log(arr);
+        anserInfo.insertMany(arr, function(error, docs) {
+            console.log("insert success!");
+            res.render("complete");
+        });
+        // anserInfo.s
+
+    });
+
+});
+
 router.get('/administration', function (req, res, next) {
     res.render('admin');
 
 });
 
-router.post('/fileupload', function (req, res, next) {
+router.post('/upload-useraspect', function (req, res, next) {
+    req.setTimeout(0);
     var form = new formidable.IncomingForm();
     form.parse(req, function (err, fields, files) {
         var oldpath = files.filetoupload1.path;
-        var newpath = '/Users/huang/Desktop/FYP-explainableAI/code/express-demo/' + files.filetoupload1.name;
+        var newpath = process.cwd() + "/" + files.filetoupload1.name;
+        console.log(newpath);
         fs.rename(oldpath, newpath, function (err) {
             if (err) {
                 res.render('admin', {
-                    message: '<div class="alert alert-danger" role="alert">no file selected</div>',
+                    message1: '<div class="alert alert-danger" role="alert">no file selected</div>',
                 });
 
             } else {
@@ -393,16 +473,11 @@ router.post('/fileupload', function (req, res, next) {
                 fileStream
                     .pipe(parser)
                     .on('error', error => error)
-                    // .on('readable', () => {
-                    //     for (let row = parser.read(); row; row = parser.read()) {
-                    //         // console.log(`ROW=${JSON.stringify(row)}`);
-                    //     }
-                    // })
                     .on("data", function (data) {
-                        if (!(data.hasOwnProperty('userID')) || !(data.hasOwnProperty('genreID')) || !(data.hasOwnProperty('score'))) {
+                        if (!(data.hasOwnProperty('userID')) || !(data.hasOwnProperty('genreID')) || !(data.hasOwnProperty('score')) || (data.hasOwnProperty('itemID'))) {
                             error = 1;
                             res.render('admin', {
-                                message: '<div class="alert alert-danger" role="alert">Incorrect format</div>',
+                                message1: '<div class="alert alert-danger" role="alert">Incorrect format</div>',
                             });
                         } else {
                             var item = new ua({
@@ -422,11 +497,11 @@ router.post('/fileupload', function (req, res, next) {
                                                                 
                                 if (err){
                                     res.render('admin',{
-                                        message:'<div class="alert alert-danger" role="alert">error!</div>',
+                                        message1:'<div class="alert alert-danger" role="alert">error!</div>',
                                     });
                                 }else{
                                     res.render('admin',{
-                                        message:'<div class="alert alert-success" role="alert">Success!</div>',
+                                        message1:'<div class="alert alert-success" role="alert">Success!</div>',
                                     });
                                 }
                             });
@@ -442,143 +517,201 @@ router.post('/fileupload', function (req, res, next) {
 });
 
 
-function getMovieGenreScore(userid, movielist) {
-    var all_genres = new Set();
-
-    for (let movie of movielist) {
-
-        mg.find({ userID: userid, movieID: movie }, { genre: 1, score: 1 }).exec(function (err, genrewithscore) {
+router.post('/upload-itemaspect', function (req, res, next) {
+    req.setTimeout(0);
+    var form = new formidable.IncomingForm();
+    form.parse(req, function (err, fields, files) {
+        var oldpath = files.filetoupload2.path;
+        var newpath = process.cwd() + "/" + files.filetoupload2.name;
+        console.log(newpath);
+        fs.rename(oldpath, newpath, function (err) {
             if (err) {
-                return console.log(err)
-            }
-            for (let pair of genrewithscore) {
-
-                if (!all_genres.has(pair.genre)) {
-                    getAllGenreUserScore(userID, pair.genre);
-                    all_genres.add(pair.genre);
-                }
-
-                //save movie-genre-score
-                var newmgs = new mgs_rerank({
-                    userID: userid,
-                    movieID: movie,
-                    genre: pair.genre,
-                    prob: pair.score
-                });
-                newmgs.save(function (err, data) {
-                    if (err) {
-                        return console.log(err)
-                    }
-                    // console.log("store movie genre prob!");
+                res.render('admin', {
+                    message2: '<div class="alert alert-danger" role="alert">no file selected</div>',
                 });
 
-            }
-        });
-    }
-}
-
-function getAllGenreUserScore(user, genre) {
-    // store all genre
-    gs.find({ userID: user, genre: genre }, { pref: 1 }).exec(function (err, genrescore) {
-        if (err) {
-            return console.log(err)
-        }
-        for (let s of genrescore) {
-            console.log(s.pref);
-            var newgus = new gs_rerank({
-                userID: user,
-                genre: genre,
-                prob: s.pref
-            })
-
-            newgus.save(function (err, data) {
-                if (err) {
-                    return console.log(err)
-                }
-            });
-        }
-
-    });
-}
-
-function re_rank(a, callback) {
-    createmgs(function () {
-        creategs(function () {
-            calculating(a, movie_score.keys(), movie_score, moviegenrescore, usergenrescore, callback
-            );
-        });
-    });
-}
-
-function createmgs(cb) {
-    mgs_rerank.find({ userID: userID }, { movieID: 1, genre: 1, prob: 1 }).exec(function (err, data) {
-        if (err) {
-            return console.log(err)
-        }
-        for (let dat of data) {
-            let val = new Map();
-            val.set(dat.genre, dat.prob);
-            moviegenrescore.set(dat.movieID, val);
-        }
-
-        cb(null, moviegenrescore);
-    });
-};
-
-
-function creategs(cb) {
-    gs_rerank.find({ userID: userID }, { genre: 1, prob: 1 }).exec(function (err, data) {
-        if (err) {
-            return console.log(err)
-        }
-        for (let dat of data) {
-            usergenrescore.set(dat.genre, dat.prob);
-        }
-
-        cb(null, usergenrescore);
-    });
-};
-
-function calculating(a, ml, moviescore, moviegenrescore, usergenrescore, cb) {
-    dlist = new Set();
-    movielist = new Set();
-    // construct new list
-    // remove top1 movieID from origin list
-    for (let m of ml) {
-        movielist.add(m);
-    }
-
-    for (count = 0; count != 10; count++) {
-        dev_score = new Map();
-        for (let movie of movielist) {
-            console.log("wwwwwwww" + movie);
-            if (!dlist.has(movie)) {
-                console.log("nonononoo");
-                right_part = 0;
-                for (let genre of moviegenrescore.get(movie).keys()) {
-                    // iterate movies in re-rank list
-                    for (let newmovie of dlist) {
-                        console.log("new movie each time -------->" + newmovie);
-                        if (moviegenrescore.get(newmovie).keys().has(genre)) {
-                            right_part += usergenrescore.get(genre) * (moviegenrescore.get(movie)).get(genre) *
-                                (1 - (moviegenrescore.get(newmovie)).get(genre));
+            } else {
+                var fileStream = fs.createReadStream(newpath);
+                var parser = csv.parse({ headers: true });
+                var dataArr = [];
+                var error = 0;
+                fileStream
+                    .pipe(parser)
+                    .on('error', error => error)
+                    .on("data", function (data) {
+                        if (!(data.hasOwnProperty('userID')) || !(data.hasOwnProperty('genreID')) || !(data.hasOwnProperty('itemID')) || !(data.hasOwnProperty('score'))) {
+                            error = 1;
+                            res.render('admin', {
+                                message2: '<div class="alert alert-danger" role="alert">Incorrect format</div>',
+                            });
                         } else {
-                            right_part += usergenrescore.get(genre) * (moviegenrescore.get(movie)).get(genre)
+                            var item = new ia({
+                                userID: parseInt(data.userID),
+                                genreID: parseInt(data.genreID),
+                                itemID: parseInt(data.itemID),
+                                score: parseFloat(data.score)
+                            });
                         }
-                    }
-                }
+                        dataArr.push(item);
+
+                    })
+                    .on("end", () => {
+                        if (error != 1) {
+                            async.eachSeries(dataArr, function (item, asyncdone) {
+                                item.save(asyncdone);
+                            }, function (err) {
+                                                                
+                                if (err){
+                                    console.log(err);
+                                    res.render('admin',{
+                                        message2:'<div class="alert alert-danger" role="alert">error!</div>',
+                                    });
+                                }else{
+                                    res.render('admin',{
+                                        message2:'<div class="alert alert-success" role="alert">Success!</div>',
+                                    });
+                                }
+                            });
+                        } else {
+                            console.log("error!");
+                        }
+
+                    });
             }
-            dev_score.set(movie, (1 - a) * moviescore.get(movie) + a * right_part);
-        }
-        //const max = Object.entries(dev_score).reduce((a, b) => a[1] > b[1] ? a : b)[0]
-        console.log("max one ------" + max);
+        });
 
-        dlist.add(max);
-        console.log("list2 size------------>" + dlist.size);
-    }
+    });
+});
 
-    cb(null, dlist);
-}
+router.post('/upload-ratings', function (req, res, next) {
+    req.setTimeout(0);
+    var form = new formidable.IncomingForm();
+    form.parse(req, function (err, fields, files) {
+        var oldpath = files.filetoupload3.path;
+        var newpath = process.cwd() + "/" + files.filetoupload3.name;
+        console.log(newpath);
+        fs.rename(oldpath, newpath, function (err) {
+            if (err) {
+                console.log(err);
+                res.render('admin', {
+                    message3: '<div class="alert alert-danger" role="alert">no file selected</div>',
+                });
 
+            } else {
+                var fileStream = fs.createReadStream(newpath);
+                var parser = csv.parse({ headers: true });
+                var dataArr = [];
+                var error = 0;
+                fileStream
+                    .pipe(parser)
+                    .on('error', error => error)
+                    .on("data", function (data) {
+                        if (!(data.hasOwnProperty('userID')) || !(data.hasOwnProperty('movieID')) ||  !(data.hasOwnProperty('score'))) {
+                            error = 1;
+                            res.render('admin', {
+                                message3: '<div class="alert alert-danger" role="alert">Incorrect format</div>',
+                            });
+                        } else {
+                            var item = new userRating({
+                                movieID: parseInt(data.movieID),
+                                userID: parseInt(data.userID),
+                                score: parseFloat(data.score)
+                            });
+                        }
+                        dataArr.push(item);
+
+                    })
+                    .on("end", () => {
+                        if (error != 1) {
+                            async.eachSeries(dataArr, function (item, asyncdone) {
+                                item.save(asyncdone);
+                            }, function (err) {
+                                                                
+                                if (err){
+                                    res.render('admin',{
+                                        message3:'<div class="alert alert-danger" role="alert">error!</div>',
+                                    });
+                                }else{
+                                    res.render('admin',{
+                                        message3:'<div class="alert alert-success" role="alert">Success!</div>',
+                                    });
+                                }
+                            });
+                        } else {
+                            console.log("error!");
+                        }
+
+                    });
+            }
+        });
+
+    });
+});
+
+router.post('/upload-movies', function (req, res, next) {
+    req.setTimeout(0);
+    var form = new formidable.IncomingForm();
+    form.parse(req, function (err, fields, files) {
+        var oldpath = files.filetoupload4.path;
+        var newpath = process.cwd() + "/" + files.filetoupload4.name;
+        console.log(newpath);
+        fs.rename(oldpath, newpath, function (err) {
+            if (err) {
+                console.log(err);
+                res.render('admin', {
+                    message3: '<div class="alert alert-danger" role="alert">no file selected</div>',
+                });
+
+            } else {
+                var fileStream = fs.createReadStream(newpath);
+                var parser = csv.parse({ headers: true });
+                var dataArr = [];
+                var error = 0;
+                fileStream
+                    .pipe(parser)
+                    .on('error', error => error)
+                    .on("data", function (data) {
+                        if (!(data.hasOwnProperty('_id')) || !(data.hasOwnProperty('itemName')) ||  !(data.hasOwnProperty('genres'))  ||  !(data.hasOwnProperty('posterUrl'))) {
+                            error = 1;
+                            res.render('admin', {
+                                message4: '<div class="alert alert-danger" role="alert">Incorrect format</div>',
+                            });
+                        } else {
+                            var item = new movieInfo({
+                                _id: parseInt(data._id),
+                                itemName: data.itemName,
+                                genres: data.genres,
+                                posterUrl: data.posterUrl
+                            });
+                        }
+                        dataArr.push(item);
+
+                    })
+                    .on("end", () => {
+                        if (error != 1) {
+                            async.eachSeries(dataArr, function (item, asyncdone) {
+                                item.save(asyncdone);
+                            }, function (err) {
+                                                                
+                                if (err){
+                                    res.render('admin',{
+                                        message4:'<div class="alert alert-danger" role="alert">error!</div>',
+                                    });
+                                }else{
+                                    res.render('admin',{
+                                        message4:'<div class="alert alert-success" role="alert">Success!</div>',
+                                    });
+                                }
+                            });
+                        } else {
+                            console.log("error!");
+                        }
+
+                    });
+            }
+        });
+
+    });
+});
 
 module.exports = router;

@@ -58,17 +58,16 @@
         }
     </script>
     <div class="d-flex flex-column flex-md-row align-items-center p-3 px-md-4 mb-3 bg-white border-bottom box-shadow">
-        <h5 class="my-0 mr-md-auto font-weight-normal">Explainable AI</h5>
+        <h5 class="my-0 mr-md-auto font-weight-normal"><a href="/users/add">Explainable AI</a></h5>
         <nav class="my-2 my-md-0 mr-md-3">
-            <a class="p-2 text-dark" href="#">Features</a>
             <a class="p-2 text-dark" href="/users/administration">Administration</a>
             <a class="p-2 text-dark" href="/users/survey">Survey</a>
         </nav>
     </div>
     <div class="container border border-light rounded-lg col-11 box-shadow" style="padding:20px" id="container1">
-        <form action="/users/fileupload" enctype="multipart/form-data" method="post" id="formua">
-            <% if (typeof message != 'undefined') { %>
-            <%- message %>
+        <form action="/users/upload-useraspect" enctype="multipart/form-data" method="post" id="formua">
+            <% if (typeof message1 != 'undefined') { %>
+            <%- message1 %>
             <% } %>
             <div class="callout callout-default">
                 <h4>Reminder</h4>
@@ -77,18 +76,77 @@
             <div class="custom-file">
                 <input type="file" class="custom-file-input" id="uafile" style="width: 40%" name="filetoupload1">
                 <label class="custom-file-label" for="customFile" style="width: 40%">Choose file</label>
-                <!-- <input type="submit" name="btn" value="Upload"  class="btn btn-success" style="margin-left:50px;vertical-align: text-bottom;"/> -->
                 <button class="btn btn-success" style="vertical-align: text-bottom;" type="button" value="Upload"
                     id="submitButton1">
-                    <!-- <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                    Loading... -->
                     Submit
                 </button>
             </div>
 
         </form>
         <div id="displaydata1" style="padding-top:30px">
+        </div>
 
+        <form action="/users/upload-itemaspect" enctype="multipart/form-data" method="post" id="formia">
+            <% if (typeof message2 != 'undefined') { %>
+            <%- message2 %>
+            <% } %>
+            <div class="callout callout-default">
+                <h4>Reminder</h4>
+                Please upload a csv file with header of userID, genreID, itemID and score.
+            </div>
+            <div class="custom-file">
+                <input type="file" class="custom-file-input" id="iafile" style="width: 40%" name="filetoupload2">
+                <label class="custom-file-label" for="customFile" style="width: 40%">Choose file</label>
+                <button class="btn btn-success" style="vertical-align: text-bottom;" type="button" value="Upload"
+                    id="submitButton2">
+                    Submit
+                </button>
+            </div>
+
+        </form>
+        <div id="displaydata2" style="padding-top:30px">
+        </div>
+
+        <form action="/users/upload-ratings" enctype="multipart/form-data" method="post" id="formratings">
+            <% if (typeof message3 != 'undefined') { %>
+            <%- message3 %>
+            <% } %>
+            <div class="callout callout-default">
+                <h4>Reminder</h4>
+                Please upload a csv file with header of userID, movieID and score.
+            </div>
+            <div class="custom-file">
+                <input type="file" class="custom-file-input" id="ratingfile" style="width: 40%" name="filetoupload3">
+                <label class="custom-file-label" for="customFile" style="width: 40%">Choose file</label>
+                <button class="btn btn-success" style="vertical-align: text-bottom;" type="button" value="Upload"
+                    id="submitButton3">
+                    Submit
+                </button>
+            </div>
+
+        </form>
+        <div id="displaydata3" style="padding-top:30px">
+        </div>
+
+        <form action="/users/upload-movies" enctype="multipart/form-data" method="post" id="formmovies">
+            <% if (typeof message4 != 'undefined') { %>
+            <%- message4 %>
+            <% } %>
+            <div class="callout callout-default">
+                <h4>Reminder</h4>
+                Please upload a csv file with header of _id, itemName, genres and posterUrl.
+            </div>
+            <div class="custom-file">
+                <input type="file" class="custom-file-input" id="moviesfile" style="width: 40%" name="filetoupload4">
+                <label class="custom-file-label" for="customFile" style="width: 40%">Choose file</label>
+                <button class="btn btn-success" style="vertical-align: text-bottom;" type="button" value="Upload"
+                    id="submitButton4">
+                    Submit
+                </button>
+            </div>
+
+        </form>
+        <div id="displaydata4" style="padding-top:30px">
         </div>
 
     </div>
@@ -101,20 +159,23 @@
         })
        
         $('.custom-file-input').on('change', function () {
-            $("#uafile").html("");
+            $(this).html("");
             var fileName = $(this).val();
             console.log(fileName);
             $(this).next('.custom-file-label').addClass("valid-file-label").html(fileName);
-            var file = document.getElementById("uafile").files[0];
+            var file = this.files[0];
             var file_url = URL.createObjectURL(file);
-            $("#displaydata1").append("p").html("Preview the first 20 rows at most")
+            var str = $(this).nextAll('button').first().attr("id");
+            str = "#" + "displaydata" + str[str.length-1]
+            console.log(str);
+            $(str).append("p").html("Preview the first 20 rows at most")
             d3.text(file_url, function (data) {
                 var parsedCSV = d3.csv.parseRows(data);
                 console.log(parsedCSV);
                 parsedCSV = parsedCSV.slice(0, 21);
                 console.log(parsedCSV);
 
-                var container = d3.select("#displaydata1")
+                var container = d3.select(str)
                     .append("table").attr("class", "table table-bordered")
 
                     .selectAll("tr")
@@ -129,6 +190,27 @@
 
         })
 
+        $("#fileControl").val('');
+        $('#submitButton2').click(function(){
+            $('#submitButton2').html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>Loading...');
+            $('#submitButton2').attr('disabled','disabled');
+            $("#formia").submit();
+            
+        })
+
+        $('#submitButton3').click(function(){
+            $('#submitButton3').html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>Loading...');
+            $('#submitButton3').attr('disabled','disabled');
+            $("#formratings").submit();
+            
+        })
+
+        $('#submitButton4').click(function(){
+            $('#submitButton4').html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>Loading...');
+            $('#submitButton4').attr('disabled','disabled');
+            $("#formmovies").submit();
+            
+        })
     </script>
     <script type="text/javascript" charset="utf-8">
 

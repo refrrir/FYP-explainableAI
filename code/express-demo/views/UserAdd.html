@@ -35,16 +35,24 @@
 
 
     <div class="d-flex flex-column flex-md-row align-items-center p-3 px-md-4 mb-3 bg-white border-bottom box-shadow">
-        <h5 class="my-0 mr-md-auto font-weight-normal">Explainable AI</h5>
+        <h5 class="my-0 mr-md-auto font-weight-normal"><a href="/users/add">Explainable AI</a></h5>
         <nav class="my-2 my-md-0 mr-md-3">
-            <a class="p-2 text-dark" href="#">Features</a>
             <a class="p-2 text-dark" href="/users/administration">Administration</a>
             <a class="p-2 text-dark" href="/users/survey">Survey</a>
         </nav>
         <% if (typeof userID != 'undefined') { %>
-            <form class="form-inline" action="/users/add" method="post">
+            <form class="form-inline" action="/users/explanation" method="post">
             <input type="hidden" name="userID" id="userID"  value="<%= userID %>" >
-            <button type="submit" class="btn btn-success">Generate my recommendation!</button>
+            <div class="btn-group">
+                <button type="button" class="btn btn-success dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    Generate my recommendation!
+                </button>
+                <div class="dropdown-menu dropdown-menu-right">
+                  <button class="dropdown-item" name="explanationtype" value="noexplanation">Recommendation without any explanation</button>
+                  <button class="dropdown-item" name="explanationtype" value="textexplanation">Recommendation with textual explanation</button>
+                  <button class="dropdown-item" name="explanationtype" value="sliderexplanation">Recommendation with slider explanation</button>
+                </div>
+              </div>
             </form>
         <% } %>
     </div>
@@ -56,10 +64,10 @@
                   <div class="col-sm-2">
                     <% if (typeof userID === 'undefined') { %>
                         <input type="number" class="form-control" name="userID" id="userID" value="" required lay-verify="required"
-                        placeholder="from 1 to 1200" autocomplete="off">
+                        placeholder="from 1 to 943" autocomplete="off">
                     <% } else { %>
                         <input type="number" class="form-control" name="userID" id="userID" value="<%= userID %>" required lay-verify="required"
-                        placeholder="from 1 to 1200" autocomplete="off">
+                        placeholder="from 1 to 943" autocomplete="off">
                     <% } %>
                   </div>
                   <div class="col-sm-2">
@@ -71,20 +79,6 @@
 
             
 
-                <!-- <div style="width: 550px; position: relative; left: 8.5%;">
-                    <div class="layui-form-item">
-                        <label class="layui-form-label" style="color: #8D8D8D">Recommender Algorithm</label>
-                        <div class="layui-input-block" style="position: relative;margin-top: 20px;left: 8.5%">
-                            <select name="algo" id="algo" lay-verify="required">
-                                <option value="">choose algorithm</option>
-                                <option value="0">user-based nearest neighbors</option>
-                                <option value="1">item-based nearest neighbors</option>
-                                <option value="2">matrix factorization of Hu'etal.</option>
-                                <option value="3">matrix factorization of Pilaszy.</option>
-                            </select>
-                        </div>
-                    </div>
-                </div> -->
 
 
             <% if (typeof ratings != 'undefined') { %>
@@ -129,13 +123,7 @@
             <% } %>
 
     </div>
-    <!-- <div class="layui-carousel" id="test1" style="margin: 4px 90px; text-align: center; background-color: #F2F2F2;">
-        <div carousel-item>
-            <div><img src="/libs/aquaman.jpg" height="420" width="1180" />条目1</div>
-            <div><img src="/libs/The-Great.jpg" height="420" width="1180" /></div>
-            <div><img src="/libs/X-Men.jpg" height="420" width="1180" /></div>
-        </div>
-    </div> -->
+ 
 
     <script src="/libs/layui/layui.js"></script>
     <script>
@@ -151,54 +139,6 @@
         });
     </script>
 
-    <!-- <div style="width: 650px; position: relative; margin-top:20px;left:25%;">
-        <form action="/users/add" method="post" class="layui-form">
-            <div class="layui-form-item">
-                <label class="layui-form-label">UserID</label>
-                <div class="layui-form-mid layui-word-aux">User ID</div>
-                <div class="layui-input-inline" style="left: 6.9%">
-                    <input type="number" name="userID" id="userID" value="" required lay-verify="required"
-                        placeholder="from 0 to 6200" autocomplete="off" class="layui-input">
-                </div>
-            </div>
-
-            <div style="width: 550px; position: relative; left: 8.5%;">
-                <div class="layui-form-item">
-                    <label class="layui-form-label" style="color: #8D8D8D">Recommender Algorithm</label>
-                    <div class="layui-input-block" style="position: relative;margin-top: 20px;left: 8.5%">
-                        <select name="algo" id="algo" lay-verify="required">
-                            <option value="">choose algorithm</option>
-                            <option value="0">user-based nearest neighbors</option>
-                            <option value="1">item-based nearest neighbors</option>
-                            <option value="2">matrix factorization of Hu'etal.</option>
-                            <option value="3">matrix factorization of Pilaszy.</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-            <label class="layui-form-label" style="color: #8D8D8D; position: relative;left: 8.5%;">Degree of
-                Diversity</label>
-            <div name="dev" id="dev" class="demo-slider"
-                style="left: 32.8%; position: relative;width: 444px; margin-top: 20px;margin-bottom: 12px;"></div>
-
-            <div class="layui-form-item">
-                <label class="layui-form-label" style="color: #8D8D8D; left: 8.5%;">Movie List</label>
-                <div style="left: 15.5%" class="layui-input-block">
-                    <button class="layui-btn layui-btn-sm layui-btn-radius layui-btn-primary">Top5</button>
-                    <input type="radio" name="top5" id="top" value="0" title="Top5">
-                    <button class="layui-btn layui-btn-sm layui-btn-radius layui-btn-primary">Top10</button>
-                    <input type="radio" name="top10" value="1" title="Top10" checked>
-                </div>
-
-                <div class="layui-input-block" style="left: 10.5%">
-                    <button class="layui-btn" lay-submit lay-filter="formDemo" id="find"
-                        style="margin-top: 10px; left: 120%;position: relative;">Submit
-                    </button>
-                </div>
-            </div>
-
-        </form>
-    </div> -->
 
     <script>
         layui.use('slider', function () {

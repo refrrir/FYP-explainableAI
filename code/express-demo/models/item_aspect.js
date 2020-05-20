@@ -13,7 +13,6 @@ const movie = mongoose.model('movie',movieInfo);
 
 
 var itemas = new Schema({
-    _id:Schema.Types.ObjectId,
     userID: String,
     genreID: String,
     itemID: String,

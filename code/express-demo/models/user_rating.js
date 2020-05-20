@@ -6,7 +6,6 @@ const Schema = mongoose.Schema;
 var userRating = new Schema({
     movieID:String,
     userID:String,
-    title:String,
     score:String
 },{collection: 'ratingInfo'});
 

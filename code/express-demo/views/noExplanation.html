@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Movie List</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+        integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="/libs/layui/css/data.css">
+
+</head>
+
+<body class="mdui-theme-primary-teal">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
+    <script src="https://d3js.org/d3.v3.min.js"></script>
+
+    <!-- <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
+        integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n"
+        crossorigin="anonymous"></script> -->
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+        integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+        crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
+        integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
+        crossorigin="anonymous"></script>
+
+
+    <div
+        class="d-flex flex-column flex-md-row align-items-center p-3 px-md-4 mb-3 bg-white border-bottom box-shadow  fixed-top">
+        <h5 class="my-0 mr-md-auto font-weight-normal"><a href="/users/add">Explainable AI</a></h5>
+        <nav class="my-2 my-md-0 mr-md-3">
+            <a class="p-2 text-dark" href="/users/administration">Administration</a>
+            <a class="p-2 text-dark" href="/users/survey">Survey</a>
+        </nav>
+        <!-- <input id='regenerate' value='generate again !' class='btn btn-success' type="button"> -->
+    </div>
+    <div class="container border border-light rounded-lg col-11 box-shadow" id="containerarea1">
+        
+
+        <div id='noexplanation' class='type'>
+            <div id='loading' class="lds-ring">
+            </div>
+            <div id='recarea'>
+                <% for (var r in recPro){ %>
+                <div class='container border border-light rounded-lg col-11 box-shadow item'
+                    id="<%= 'container' + String(recPro[r][0]) %>">
+                    <div class='row'>
+                        <div class='col-3 picarea'>
+                            <div class=''>
+                                <img class='pic' src="<%=recPro[r][3]%>">
+                            </div>
+                        </div>
+                        <div class='col-9'>
+                            <div class='container'>
+                                <div class='row'>
+                                    <div class='title'>
+                                        <p><%= recPro[r][2] %></p>
+                                    </div>
+                                </div>
+                                <div class='row'>
+                                    <div class=''>
+                                        <span class='fa fa-star checked'></span>
+                                        <p class='score'><%=(recPro[r][1]/ recPro[0][1] * 10).toFixed(2)%></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <% } %>
+            </div>
+        </div>
+    </div>
+
+    <!-- <footer class="fixed-bottom box-shadow"> -->
+
+    <script>
+        function switchexplanation(cityName){
+            var i;
+            var x = document.getElementsByClassName("type");
+            for (i = 0; i < x.length; i++) {
+                x[i].style.display = "none";
+            }
+            document.getElementById(cityName).style.display = "block";
+        }
+    </script>
+
+    <script type="text/javascript">
+
+
+
+        var userID = <%= userID %>;
+
+        $(document).ready(function () {
+            var highest = <%= highest %>;
+            var genres = <%-JSON.stringify(genres) %>;
+            var genrePro = <%-JSON.stringify(genrePro) %>;
+            var genreName = new Map([["1", "Action"], ["2", "Adventure"], ["3", "Animation"], ["4", "Children's"], ["5", "Comedy"], ["6", "Crime"], ["7", "Documentary"], ["8", "Drama"], ["9", "Fantasy"], ["10", "Film-Noir"], ["11", "Horror"], ["12", "Musical"], ["13", "Mystery"], ["14", "Romance"], ["15", "Sci-Fi"], ["16", "Thriller"], ["17", "War"], ["18", "Western"]]);
+            setPara(genres, genreName);
+            change(randomData());
+            $('#loading').hide();
+            $("#sliderarea .slider").change(function () {
+                var index = this.id.replace("slider ", "");
+                console.log(genres);
+                var value = this.value / 80 * highest;
+                genres[String(index)] = Number(value);
+                change(randomData());
+
+            });
+            $(".movieslider .slider").change(function () {
+                var index = this.id.replace("slider", "").split(" ");
+                var movieID = index[0];
+                var genreID = index[1];
+                var value = this.value / 100;
+                console.log(movieID);
+                genrePro[movieID][genreID] = Number(value);
+                console.log(JSON.stringify(genrePro));
+
+            });
+            $('#regenerate').click(function () {
+                console.log(genres);
+                console.log(genrePro);
+                console.log("not complete");
+
+                $.ajax({
+                    url: '/users/update',
+                    type: 'POST',
+                    cache: false,
+                    contentType: "application/json",
+
+                    data: JSON.stringify({
+                        genre_score: genres,
+                        genrePro: genrePro,
+                        userID: userID,
+                        // topn: topn
+                    }),
+                    beforeSend: function () {
+                        $('#loading').show();
+                        $("#sliderarea").html("");
+                        $("#recarea").html("");
+                    },
+                    success: function (data) {
+                        $("#sliderarea").html("");
+                        $("#recarea").html("");
+                        // console.log(data.recPro);
+                        recPro = data.recPro;
+                        genres = data.genres;
+                        genrePro = data.genrePro;
+                        highest = data.highest;
+                        for (var key in genres) {
+                            $("#sliderarea").append("<div class='row'><label class='genre-name'>" + genreName.get(key) + "</label><input type='range' min='1' max='100' class='slider slider2' id='slider " + key + "' value='" + genres[key] / highest * 80 + "'></div>");
+                        }
+                        for (var r in recPro) {
+                            $("#recarea").append("<div class='container border border-light rounded-lg col-11 box-shadow item' id = 'container" + String(recPro[r][0]) + "'>\
+                                <div class='row'>\
+                                    <div class='col-3 picarea'>\
+                                        <div class = ''>\
+                                            <img class='pic' src='" + recPro[r][3] + "'>\
+                                        </div>\
+                                    </div>\
+                                    <div class='col-9'>\
+                                        <div class='container'>\
+                                            <div class='row'>\
+                                                <div class='title'><p>" + recPro[r][2] + "</p>\
+                                                </div>\
+                                            </div>\
+                                            <div class='row'>\
+                                                <div class=''>\
+                                                    <span class='fa fa-star checked'></span>\
+                                                    <p class='score'>" + (recPro[r][1] / recPro[0][1] * 10).toFixed(2) + "</p>\
+                                                </div>\
+                                            </div>\
+                                            <div class='sliderarea2'>\
+                                            </div>\
+                                        </div>\
+                                    </div>\
+                                </div>\
+                            </div>")
+                            for (var key in genrePro[String(recPro[r][0])]) {
+                                $("#recarea .sliderarea2:last").append("<div class='row movieslider'>\
+                                            <label class='genre-name'>" + genreName.get(key) + "</label>\
+                                            <input type='range' min='0' max='100' class='slider' id='slider" + String(recPro[r][0]) + " " + key + "' value='" + genrePro[String(recPro[r][0])][key] * 100 + "'>\
+                                        </div>")
+                            }
+
+                        }
+                        $("#sliderarea .slider").change(function () {
+                            var index = this.id.replace("slider ", "");
+                            console.log(genres);
+                            var value = this.value / 80 * highest;
+                            genres[String(index)] = Number(value);
+                            change(randomData());
+
+                        });
+                        $(".movieslider .slider").change(function () {
+                            var index = this.id.replace("slider", "").split(" ");
+                            var movieID = index[0];
+                            var genreID = index[1];
+                            var value = this.value / 100;
+                            console.log(movieID);
+                            genrePro[movieID][genreID] = Number(value);
+                            console.log(JSON.stringify(genrePro));
+                        });
+
+                        $('#loading').hide();
+                        setPara(genres, genreName);
+                        change(randomData());
+
+                        change(randomData());
+                    },
+                    error: function (jqXHR, textStatus, err) {
+                        alert('text status ' + textStatus + ', err ' + err)
+                    }
+                })
+            });
+
+        });
+
+
+    </script>
+</body>
+
+</html>

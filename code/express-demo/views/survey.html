@@ -35,28 +35,29 @@
 
 
     <div class="d-flex flex-column flex-md-row align-items-center p-3 px-md-4 mb-3 bg-white border-bottom box-shadow">
-        <h5 class="my-0 mr-md-auto font-weight-normal">Explainable AI</h5>
+        <h5 class="my-0 mr-md-auto font-weight-normal"><a href="/users/add">Explainable AI</a></h5>
         <nav class="my-2 my-md-0 mr-md-3">
-            <a class="p-2 text-dark" href="#">Features</a>
-            <a class="p-2 text-dark" href="#">Enterprise</a>
-            <a class="p-2 text-dark" href="#">Support</a>
+            <a class="p-2 text-dark" href="/users/administration">Administration</a>
+            <a class="p-2 text-dark" href="/users/survey">Survey</a>
         </nav>
     </div>
     <div class="container">
         <h1>questionaire</h1>
-        <form>
+        <form action="/users/submitsurvey" method="post">
             <% for (var i = 0; i < data.length; i++) { %>
                 <% if (data[i].type == 'singleLineAnswer') { %>
                     <div class="form-group">
+                        <input type="hidden" value="<%=data[i].question %>" name="<%=i %>">
                         <label for="exampleFormControlInput1"><%=data[i].question %></label>
-                        <input type="text" class="form-control" id="exampleFormControlInput1">
+                        <input type="text" class="form-control" required name="<%=i %>">
                     </div>
                 <% } %>
 
                 <% if (data[i].type == 'multipleLineAnswer') { %>
                     <div class="form-group">
+                        <input type="hidden" value="<%=data[i].question %>" name="<%=i %>">
                         <label for="exampleFormControlTextarea1"><%=data[i].question %></label>
-                        <textarea class="form-control" id="exampleFormControlTextarea1" rows="3"></textarea>
+                        <textarea class="form-control" name="<%=i %>" required rows="3"></textarea>
                     </div>
 
                 <% } %>
@@ -66,10 +67,11 @@
                         <div class="row">
                             <legend class="col-form-label col-sm-2 pt-0"><%=data[i].question %></legend>
                             <div class="col-sm-10">
+                                <input type="hidden" value="<%=data[i].question %>" name="<%=i %>">
                                 <% for (var j = 0; j < optionsObj[data[i]._id].length; j++) { %>
                                     <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="gridRadios" id="gridRadios1"
-                                            value="option1" checked>
+                                        <input class="form-check-input" type="radio" name="<%=i %>" value="<%=optionsObj[data[i]._id][j] %>" id="<%=i %>"
+                                             required>
                                         <label class="form-check-label" for="gridRadios1">
                                             <%=optionsObj[data[i]._id][j] %>
                                         </label>
@@ -85,8 +87,9 @@
                         <div class="col-sm-2"><%=data[i].question %></div>
                         <div class="col-sm-10">
                             <% for (var j = 0; j < optionsObj[data[i]._id].length; j++) { %>
+                                <input type="hidden" value="<%=data[i].question %>" name="<%=i %>">
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="gridCheck1">
+                                    <input class="form-check-input" type="checkbox" name="<%=i %>" id="<%=i %>" value="<%=optionsObj[data[i]._id][j] %>" required>
                                     <label class="form-check-label" for="gridCheck1">
                                         <%=optionsObj[data[i]._id][j] %>
                                     </label>
@@ -102,9 +105,10 @@
                     <div class="form-group row">
                         <div class="col-sm-2"><%=data[i].question %></div>
                         <div class="col-sm-10">
+                        <input type="hidden" value="<%=data[i].question %>" name="<%=i %>">
                         <% for (var j = 0; j < optionsObj[data[i]._id].length; j++) { %>
                             <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio1" value="option1">
+                                <input class="form-check-input" type="radio" name="<%=i %>" id="<%=i %>"  value="<%=optionsObj[data[i]._id][j] %>" required>
                                 <label class="form-check-label" for="inlineRadio1"><%=optionsObj[data[i]._id][j] %></label>
                             </div>
                         <% } %>
@@ -115,28 +119,6 @@
                 <% } %>
 
             <% } %>
-
-
-            
-
-
-
-
-
-
-
-
-
-
-            
-
-
-
-
-
-
-
-
 
             <div class="form-group row">
                 <div class="col-sm-10">

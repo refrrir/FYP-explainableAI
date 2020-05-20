@@ -31,12 +31,12 @@ svg.attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
 
 var key = function (d) { return d.data.label; };
 
-
 var genre_score = new Map();
 
-function setPara(a) {
+function setPara(a,b) {
 	console.log(a);
 	genre_score = a;
+	genreName = b;
 	var i = 0;
 	var genres = new Array();
 	for (let key in a) {
@@ -52,75 +52,6 @@ function getPara(){
 	return genre_score;
 }
 
-function loadAll(numOfGen, numOfRec) {
-	loadSliders(numOfGen)
-}
-
-
-
-function loadSliders(num, sliderarea, id) {
-	var sortable = [];
-	for (var score in genre_score) {
-		sortable.push([score, genre_score[score]]);
-	}
-
-	sortable.sort(function(a, b) {
-		return b[1] - a[1];
-	});
-
-
-	for (let key in genre_score) {
-		var slidecontainer = document.createElement("div");
-		// var sliderarea = document.getElementById("sliderarea");
-		slidecontainer.class = 'slidecontainer';
-		var text = document.createElement("label");
-		text.innerHTML = genreName.get(key);
-		text.classList.add('genre-name');
-		var slider = document.createElement("input");
-		slider.type = 'range';
-		slider.min = '1';
-		slider.max = '100';
-		slider.value = genre_score[key] * 80 / sortable[0][1];
-		slider.classList.add('slider');
-		slider.classList.add('slider2');
-		if (id != '') {
-			slider.id = id + " " + key;
-		}
-		// console.log(key,map.get(key));
-		slidecontainer.classList.add("row");
-		slidecontainer.appendChild(text);
-		slidecontainer.appendChild(slider);
-		sliderarea.appendChild(slidecontainer);	
-	}
-}
-
-function loadSliders2(data, sliderarea, id) {
-	for (var key in data) {
-		var slidecontainer = document.createElement("div");
-		// var sliderarea = document.getElementById("sliderarea");
-		slidecontainer.class = 'slidecontainer';
-		var text = document.createElement("label");
-		text.classList.add('genre-name');
-		text.innerHTML = genreName.get(key);
-		var slider = document.createElement("input");
-		slider.type = 'range';
-		slider.min = '0';
-		slider.max = '100';
-		slider.value = data[key] * 100;
-		// console.log(data);
-		// slider.classList.add('col-8');
-		slider.classList.add('slider');
-		if (id != '') {
-			slider.id = id + " " + key;
-		}
-		// console.log(key,map.get(key));
-		slidecontainer.classList.add("row");
-		slidecontainer.classList.add("movieslider");
-		slidecontainer.appendChild(text);
-		slidecontainer.appendChild(slider);
-		sliderarea.appendChild(slidecontainer);	
-	}
-}
 
 function randomData() {
 	var labels = color.domain();
@@ -134,6 +65,7 @@ function randomData() {
 
 
 function change(data) {
+	console.log("hello");
 	/* ------- PIE SLICES -------*/
 	var slice = svg.select(".slices").selectAll("path.slice")
 		.data(pie(data), key);
